@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokedex.io</title>
+    <link rel="stylesheet" href="style.css">
+   <link rel="icon" type="image/x-icon" href="/icon.png">
+</head>
+<body>
+    <header>
+        <h1>Pokedex</h1>
+        <div class="searchPokemon">
+            <input type="text" id="inputPkm" placeholder="Search Pokemon...">
+            <button id="searchBtn">Search</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="pkmContainer">
+            <article class="pkm-card">
+                
+                <!-- PHẦN 1: THÔNG TIN CƠ BẢN -->
+                <div class="pkm-section info-section">
+                    <p class="pkm-id"></p>
+                    <h2 class="pkm-name"></h2>
+                    <div class="pkm-types">
+                        <h3 class="section-title">Types</h3>
+                    </div>
+                    <p class="pkm-weight"></p>
+                </div>
+
+                <!-- PHẦN 2: ABILITIES -->
+                <div class="pkm-section">
+                    <h3 class="section-title">Abilities</h3>
+                    <div class="abilities-list">
+                    </div>
+                </div>
+
+                <!-- PHẦN 3: STATS -->
+                <div class="pkm-section stats-section">
+                    <h3 class="section-title">Base Stats</h3>
+                    <div class="stats-list">
+                    </div>
+                </div>
+
+            </article>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
