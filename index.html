@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokedex.io</title>
+    <title>Pokédex.io</title>
     <link rel="stylesheet" href="style.css">
    <link rel="icon" type="image/x-icon" href="/icon.png">
 </head>
 <body>
     <header>
-        <h1>Pokedex</h1>
+        <h1>Pokédex</h1>
         <div class="searchPokemon">
             <input type="text" id="inputPkm" placeholder="Search Pokemon...">
-            <button id="searchBtn">Search</button>
+            <button type="submit" id="searchBtn">Search</button>
         </div>
     </header>
 
@@ -20,33 +20,62 @@
         <section class="pkmContainer">
             <article class="pkm-card">
                 
-                <!-- PHẦN 1: THÔNG TIN CƠ BẢN -->
+                <!-- 1.Thong tin co ban -->
                 <div class="pkm-section info-section">
                     <p class="pkm-id"></p>
                     <h2 class="pkm-name"></h2>
                     <div class="pkm-types">
                         <h3 class="section-title">Types</h3>
                     </div>
+                    <p class="pkm-height"></p>
                     <p class="pkm-weight"></p>
                 </div>
 
-                <!-- PHẦN 2: ABILITIES -->
+                <!-- 2.Abilities -->
                 <div class="pkm-section">
                     <h3 class="section-title">Abilities</h3>
                     <div class="abilities-list">
                     </div>
                 </div>
 
-                <!-- PHẦN 3: STATS -->
+                <!-- 3.Stats -->
                 <div class="pkm-section stats-section">
                     <h3 class="section-title">Base Stats</h3>
                     <div class="stats-list">
                     </div>
                 </div>
 
+                <!-- 4.Held_Item -->
+                <div class="pkm-section heldItems">
+                    <h3 class="section-title">Held Items</h3>
+                    <div class="held-items-list">
+                    </div>
+                </div>
+
+                <!-- 5.Moves -->
+                <div class="pkm-section moves">
+                    <h3 class="section-title">Moves</h3>
+                    <div class="moves-list">
+                    </div>
+                </div>
+
+                <!-- 6.Evolution -->
+                 <div class="pkm-section evo">
+                    <h3 class="section-title">Evolutions</h3>
+                    <div class="evo-pipeline">
+                    </div>
+                 </div>
+
+                 <!-- 7.Other Forms -->
+                 <div class="pkm-section forms">
+                    <h3 class="section-title">Other Forms</h3>
+                    <div class="form-list">
+                    </div>
+                 </div>
             </article>
         </section>
     </main>
+    <div id="globalTooltip" class="global-tooltip"></div>
     <script src="script.js"></script>
 </body>
 </html>
