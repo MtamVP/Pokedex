@@ -20,7 +20,7 @@ function clarifyName(name){
     if(name.startsWith("mega ")){
         let part = name.split(" ");
         if(part.length === 2){
-            name = `${parts[1]}-mega`;
+            name = `${part[1]}-mega`;
         }
         else if(part.length === 3){
             name = `${part[1]}-mega-${part[2]}`;
