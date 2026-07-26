@@ -12,6 +12,7 @@ const heldItem = document.querySelector(".held-items-list");
 const moveList = document.querySelector(".moves-list");
 const evolution = document.querySelector(".evo-pipeline");
 const formList = document.querySelector(".form-list");
+const card = document.querySelector(".pkm-card");
 
 const path_1 = "https://pokeapi.co/api/v2/pokemon/";
 let path_6 = "";
@@ -29,7 +30,15 @@ function clarifyName(name){
     return name;
 }
 
+const FALLBACK_SPRITE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
 
+function getSprite(info) {
+    const s = info.sprites;
+    if (s.front_default) return { url: s.front_default, hiRes: false };
+    const big = s.other?.home?.front_default || s.other?.["official-artwork"]?.front_default;
+    if (big) return { url: big, hiRes: true };
+    return { url: FALLBACK_SPRITE, hiRes: false };
+}
 
 async function fetchData() {
     let clean_name = inputPkm.value
@@ -39,6 +48,7 @@ async function fetchData() {
     clean_name = clarifyName(clean_name);    
     const fullPath = path_1 + clean_name;
     if(!clean_name) return;
+
     pkm_id.textContent = "Đang tải...";
     pkm_name.textContent = "";
     pkm_types.innerHTML = "";
@@ -51,20 +61,31 @@ async function fetchData() {
     evolution.innerHTML = "";
     formList.innerHTML = "";
     try{
-        const response = await fetch(fullPath)
-        if(!response.ok){
-            throw new Error("Failed to fetch data!!!");
+        let response = await fetch(fullPath);
+        if (!response.ok) {
+            const specRes = await fetch(path_5 + clean_name); 
+            if (specRes.ok) {
+                const specData = await specRes.json();
+                const defaultForm = specData.varieties.find(v => v.is_default);
+                if (defaultForm) {
+                    response = await fetch(defaultForm.pokemon.url);
+                } else {
+                    throw new Error("Không tìm thấy form mặc định!");
+                }
+            } else {
+                throw new Error("Failed to fetch data!!!");
+            }
         }
         const data = await response.json();
         pkm_id.textContent = `ID:#${data.id}`;
         pkm_name.textContent = data.name;
-        img.src = data.sprites.front_default;
+        const sprite = getSprite(data);
+        img.src = sprite.url;
         img.alt = `Pokemon ${data.name}`;
-        const pkm_img = data.sprites.front_default;
-        const pkm_alt = `Pokemon ${data.name} Image`;
-        pkm_id.after(img);
-        pkm_weight.textContent = `Weight: ${data.weight}kg`;
-        pkm_height.textContent = `Height: ${data.height}m`;
+        img.classList.toggle("hi-res", sprite.hiRes);
+        card.prepend(img);
+        pkm_weight.textContent = `Weight: ${data.weight/10}kg`;
+        pkm_height.textContent = `Height: ${data.height/10}m`;
         data.types.forEach(t => {
             pkm_types.innerHTML += `<p class="type-badge ${t.type.name}">${t.type.name}</p>`;
         });
@@ -104,7 +125,7 @@ async function fetchData() {
         });
 
         stats_list.innerHTML += `
-        <div class="stat-row>
+        <div class="stat-row">
             <span class="stat-label">Total:</span>
             <span class="stat-value">${total}</span>
         </div>`;
@@ -171,15 +192,15 @@ async function fetchData() {
                 let current_stage = evo_data.chain;
 
                 while (current_stage) {
-                    let evo_name = current_stage.species.name;
-                    let res = await fetch(path_1 + evo_name);
-                    let info = await res.json();
-                    let evo_img = info.sprites.front_default;
-                    
+                    const evo_id = current_stage.species.url.split("/").filter(Boolean).pop();
+                    const res = await fetch(path_1 + evo_id);
+                    const info = await res.json();
+                    const evo_sprite = getSprite(info);
+
                     evolution.innerHTML += `
                         <div class="evo-stage" onclick="goToPokemon('${info.name}')">
-                            <img src="${evo_img}" alt="${info.name}">
-                            <span class="evo-name">${info.name}</span>
+                            <img src="${evo_sprite.url}" alt="${info.name}" class="${evo_sprite.hiRes ? "hi-res" : ""}">
+                            <span class="evo-name">${info.name.replace(/-/g, " ")}</span>
                         </div>
                     `;
 
@@ -187,34 +208,26 @@ async function fetchData() {
                         evolution.innerHTML += `<div class="evo-arrow">➔</div>`;
                         current_stage = current_stage.evolves_to[0];
                     } else {
-                        current_stage = null; 
+                        current_stage = null;
                     }
                 }
             }
         }
         
-        if(spec_data && spec_data.varieties) {
-            for(const f of spec_data.varieties){
-                if(!f.is_default){
-                    let path_demo = f.pokemon.url;
-                    let res = await fetch(path_demo);
-                    let info = await res.json();
-                    let form_img = info.sprites.front_default;
-                    
-                    if (form_img) {
-                        let clean_name = info.name.replace(/-/g, ' ');
-                        formList.innerHTML += `
-                            <div class="form-stage" onclick="goToPokemon('${info.name}')">
-                                <img src="${form_img}" alt="${info.name}">
-                                <span class="form-name" style="text-transform: capitalize; font-size: 0.8rem;">${clean_name}</span>
-                            </div>
-                        `;
-                    }
-                }
-            }
-        }
-        
+        if (spec_data && spec_data.varieties) {
+            const others = spec_data.varieties.filter(v => v.pokemon.name !== data.name);
+            const forms = await Promise.all(others.map(v => fetch(v.pokemon.url).then(r => r.json())));
 
+            formList.innerHTML = forms.map(info => {
+                const form_sprite = getSprite(info);
+                return `
+                    <div class="form-stage" onclick="goToPokemon('${info.name}')">
+                        <img src="${form_sprite.url}" alt="${info.name}" class="${form_sprite.hiRes ? "hi-res" : ""}">
+                        <span class="form-name">${info.name.replace(/-/g, " ")}</span>
+                    </div>
+                `;
+            }).join("");
+        }
     }catch(err){
         pkm_id.textContent = `${err.message}`;
         pkm_name.textContent = "Cannot find pokemon!";
@@ -312,6 +325,8 @@ const globalTooltip = document.getElementById("globalTooltip");
 moveList.addEventListener("mouseover", function(e) {
     if (e.target.classList.contains("move-badge")) {
         const badge = e.target;
+        globalTooltip.style.setProperty("--tt-accent", getComputedStyle(badge).backgroundColor);
+
         
         const type = badge.getAttribute("data-type");
         const power = badge.getAttribute("data-power");
@@ -354,6 +369,7 @@ moveList.addEventListener("mouseout", function(e) {
 heldItem.addEventListener("mouseover", function(e) {
     if (e.target.classList.contains("item-badge")) {
         const badge = e.target;
+        globalTooltip.style.removeProperty("--tt-accent");
         
         const attribute = badge.getAttribute("data-attribute");
         const category = badge.getAttribute("data-category");
@@ -386,7 +402,7 @@ heldItem.addEventListener("mouseout", function(e) {
 abilities_list.addEventListener("mouseover", function(e) {
     if (e.target.classList.contains("ability-badge")) {
         const badge = e.target;
-        
+        globalTooltip.style.removeProperty("--tt-accent");
         const effect = badge.getAttribute("data-effect");
 
 
@@ -420,6 +436,66 @@ searchBtn.addEventListener('click', function() {
     }
 });
 
+path_all = "https://pokeapi.co/api/v2/pokemon?limit=10000";
+
+const suggestionList =  document.querySelector("#suggestionList");
+let allPkm = [];
+
+async function fetchAllPkm() {
+    try{
+        const res = await fetch(path_all);
+        const data = await res.json();
+        allPkm = data.results.map(p => {
+            const id = p.url.split("/").filter(Boolean).pop();
+            return {name : p.name, id: id};
+        });
+    }catch(err){
+        console.error("Failed to fetch", err.message);
+    }
+}
+
+fetchAllPkm();
+
+inputPkm.addEventListener("input", async function(){
+    const query = this.value.toLowerCase().trim();
+    if(!query){
+        suggestionList.style.display = "none";
+        return;
+    }
+    const filterName = allPkm.filter(pkm => pkm.name.includes(query));
+    if(filterName.length > 0){
+            suggestionList.innerHTML = filterName.map(pkm => {
+                const pixel = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pkm.id}.png`;
+                const home = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pkm.id}.png`;
+                return `
+                    <li style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <img src="${pixel}" onerror="this.onerror=null;this.src='${home}'" alt="${pkm.name}" style="width: 40px; height: 40px; object-fit: contain;">
+                        <span style="text-transform: capitalize;">${pkm.name}</span>
+                    </li>
+                `;
+            }).join("");
+            suggestionList.style.display = "block";
+        }else{
+        suggestionList.style.display = "none";
+    }
+});
+
+suggestionList.addEventListener("click", function(e){
+    const liItem = e.target.closest("li");
+    if(liItem){
+        const pkmName = liItem.querySelector("span").textContent;
+        inputPkm.value = pkmName;
+        suggestionList.style.display = "none";
+        searchBtn.click();
+    }
+});
+
+document.addEventListener("click", function(e){
+    if(!inputPkm.contains(e.target) && !suggestionList.contains(e.target)){
+        suggestionList.style.display = "none";
+    }
+});
+
 
 function goToPokemon(name){
     inputPkm.value = name;
@@ -433,7 +509,6 @@ function goToPokemon(name){
 }
 
 
-
 window.addEventListener("popstate", function(e){
     if(e.state && e.state.pkmName){
         inputPkm.value = e.state.pkmName;
@@ -443,3 +518,4 @@ window.addEventListener("popstate", function(e){
         this.location.reload();
     }
 })
+
