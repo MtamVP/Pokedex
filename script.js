@@ -165,6 +165,7 @@ async function fetchData() {
                 let priority = moveData.priority !== null ? moveData.priority : '--';
                 let dmg_class = moveData.damage_class.name !== null ? moveData.damage_class.name : '--';
                 let target = moveData.target.name !== null ? moveData.target.name : '--';
+                let flavor = moveData.flavor_text_entries.length > 0 ? moveData.flavor_text_entries.find(v => v.language.name === "en").flavor_text : '--';
 
                 moveList.innerHTML += `
                     <span class="move-badge ${move_type}" 
@@ -174,7 +175,8 @@ async function fetchData() {
                           data-pp="${pp}"
                           data-prio="${priority}"
                           data-dmg="${dmg_class}"
-                          data-target="${target}">
+                          data-target="${target}"
+                          data-flavor="${flavor}">
                         ${move_name}
                     </span>
                 `;
@@ -335,6 +337,7 @@ moveList.addEventListener("mouseover", function(e) {
         const priority = badge.getAttribute("data-prio");
         const dmg_class = badge.getAttribute("data-dmg");
         const target = badge.getAttribute("data-target");
+        const flavor = badge.getAttribute("data-flavor");
 
 
         globalTooltip.innerHTML = `
@@ -345,6 +348,7 @@ moveList.addEventListener("mouseover", function(e) {
             <strong>Priority:</strong> ${priority}<br>
             <strong>Dmg_class:</strong> ${dmg_class}<br>
             <strong>Target:</strong> ${target}<br>
+            <strong>Description:</strong> ${flavor}
         `;
 
         const rect = badge.getBoundingClientRect();
